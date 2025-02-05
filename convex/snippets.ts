@@ -89,20 +89,15 @@ export const starSnippet = mutation({
       .first();
 
     if (existing) {
-      // If the snippet is already starred, delete the star (unstar the snippet)
       await ctx.db.delete(existing._id);
     } else {
-      // If the snippet is not starred, add a new star
       await ctx.db.insert("stars", {
         userId: identity.subject,
         snippetId: args.snippetId,
       });
     }
-
-    // Now, the star count will automatically be correct based on the current state
   },
 });
-
 
 export const addComment = mutation({
   args: {
