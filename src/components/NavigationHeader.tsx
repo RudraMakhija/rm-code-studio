@@ -30,9 +30,6 @@ function NavigationHeader() {
                 >
                   RM Code Studio
                 </span>
-                <span className="block text-xs text-blue-400/60 font-medium">
-                  Interactive Code Editor
-                </span>
               </div>
             </Link>
 
