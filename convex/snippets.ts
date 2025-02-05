@@ -88,8 +88,11 @@ export const starSnippet = mutation({
       )
       .first();
 
-    // Only insert if the user hasn't already starred
-    if (!existing) {
+    if (existing) {
+      // If star exists, delete it (unstar)
+      await ctx.db.delete(existing._id);
+    } else {
+      // If no star exists, create one
       await ctx.db.insert("stars", {
         userId: identity.subject,
         snippetId: args.snippetId,
