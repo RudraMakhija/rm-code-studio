@@ -71,7 +71,6 @@ export const deleteSnippet = mutation({
   },
 });
 
-// Mutation to star/unstar a snippet
 export const starSnippet = mutation({
   args: {
     snippetId: v.id("snippets"),
@@ -80,8 +79,7 @@ export const starSnippet = mutation({
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
 
-    // Check if the user has already starred the snippet
-    const existingStar = await ctx.db
+    const existing = await ctx.db
       .query("stars")
       .withIndex("by_user_id_and_snippet_id")
       .filter(
@@ -90,18 +88,21 @@ export const starSnippet = mutation({
       )
       .first();
 
-    if (existingStar) {
-      // If star exists, delete it (unstar)
-      await ctx.db.delete(existingStar._id);
+    if (existing) {
+      // If the snippet is already starred, delete the star (unstar the snippet)
+      await ctx.db.delete(existing._id);
     } else {
-      // If no star exists, create one
+      // If the snippet is not starred, add a new star
       await ctx.db.insert("stars", {
         userId: identity.subject,
         snippetId: args.snippetId,
       });
     }
+
+    // Now, the star count will automatically be correct based on the current state
   },
 });
+
 
 export const addComment = mutation({
   args: {
@@ -178,7 +179,6 @@ export const getComments = query({
   },
 });
 
-// Query to check if the snippet is starred by the logged-in user
 export const isSnippetStarred = query({
   args: {
     snippetId: v.id("snippets"),
@@ -187,7 +187,6 @@ export const isSnippetStarred = query({
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return false;
 
-    // Check if the current user has starred the snippet
     const star = await ctx.db
       .query("stars")
       .withIndex("by_user_id_and_snippet_id")
@@ -197,22 +196,19 @@ export const isSnippetStarred = query({
       )
       .first();
 
-    return !!star; // Return true if starred, false if not
+    return !!star;
   },
 });
 
-// Query to get the count of unique stars on a snippet
 export const getSnippetStarCount = query({
   args: { snippetId: v.id("snippets") },
   handler: async (ctx, args) => {
-    // Count distinct users who have starred the snippet
     const stars = await ctx.db
       .query("stars")
       .withIndex("by_snippet_id")
       .filter((q) => q.eq(q.field("snippetId"), args.snippetId))
       .collect();
 
-    // Return the number of unique stars (users)
     return stars.length;
   },
 });
